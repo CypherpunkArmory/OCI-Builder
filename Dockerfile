@@ -1,0 +1,52 @@
+# Stage 1: build the arch-specific artifacts that must not ship with their build deps
+FROM debian:latest AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential \
+      busybox-static \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY input/disableselinux.c /tmp/disableselinux.c
+RUN mkdir /build \
+    && gcc -shared -fPIC /tmp/disableselinux.c -o /build/libdisableselinux.so \
+    && cp /bin/busybox /build/busybox
+
+# Stage 2: the real rootfs — no build toolchain
+FROM debian:latest
+
+RUN printf '127.0.0.1 localhost\n' > /etc/hosts && \
+    printf 'nameserver 8.8.8.8\nnameserver 8.8.4.4\n' > /etc/resolv.conf
+
+RUN printf '#!/bin/sh\nunset LD_PRELOAD\nunset LD_LIBRARY_PATH\nexport LIBGL_ALWAYS_SOFTWARE=1\n' \
+    > /etc/profile.d/userland.sh && chmod +x /etc/profile.d/userland.sh
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      sudo \
+      dropbear \
+      libgl1 \
+      libglx-mesa0 \
+      tightvncserver \
+      xterm \
+      xfonts-base \
+      twm \
+      expect \
+      wget \
+      curl \
+      pulseaudio \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Built artifacts from the builder stage
+COPY --from=builder /build/busybox           /support/busybox
+COPY --from=builder /build/libdisableselinux.so /support/libdisableselinux.so
+
+# Static assets (assets.txt is the old manifest file and is intentionally excluded)
+COPY assets/all/addNonRootUser.sh       /support/addNonRootUser.sh
+COPY assets/all/extractFilesystem.sh    /support/extractFilesystem.sh
+COPY assets/all/ld.so.preload           /support/ld.so.preload
+COPY assets/all/nosudo                  /support/nosudo
+COPY assets/all/startSSHServer.sh       /support/startSSHServer.sh
+COPY assets/all/startVNCServer.sh       /support/startVNCServer.sh
+COPY assets/all/startVNCServerStep2.sh  /support/startVNCServerStep2.sh
+COPY assets/all/startXSDLServer.sh      /support/startXSDLServer.sh
+COPY assets/all/startXSDLServerStep2.sh /support/startXSDLServerStep2.sh
+COPY assets/all/userland_profile.sh     /support/userland_profile.sh
