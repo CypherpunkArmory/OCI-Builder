@@ -14,9 +14,6 @@ RUN mkdir /build \
 # Stage 2: the real rootfs — no build toolchain
 FROM debian:latest
 
-RUN printf '127.0.0.1 localhost\n' > /etc/hosts && \
-    printf 'nameserver 8.8.8.8\nnameserver 8.8.4.4\n' > /etc/resolv.conf
-
 RUN printf '#!/bin/sh\nunset LD_PRELOAD\nunset LD_LIBRARY_PATH\nexport LIBGL_ALWAYS_SOFTWARE=1\n' \
     > /etc/profile.d/userland.sh && chmod +x /etc/profile.d/userland.sh
 
