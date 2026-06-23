@@ -71,8 +71,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check DockerHub credentials
+        id: dh
+        env:
+          DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          [ -n "$DH_TOKEN" ] && echo "available=true" >> "$GITHUB_OUTPUT" \
+                             || echo "available=false" >> "$GITHUB_OUTPUT"
+
       - uses: docker/login-action@v3
-        if: ${{ secrets.DOCKERHUB_TOKEN != '' }}
+        if: steps.dh.outputs.available == 'true'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
