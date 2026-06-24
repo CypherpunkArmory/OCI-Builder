@@ -1,0 +1,22 @@
+name: Build Debian
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # every Monday 06:00 UTC
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.debian
+      - 'input/**'
+      - 'assets/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-debian
+      upstream_image: debian:latest
+      dockerfile: Dockerfile.debian
+      platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
+    secrets: inherit

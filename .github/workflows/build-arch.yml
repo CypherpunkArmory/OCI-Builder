@@ -1,0 +1,23 @@
+name: Build Arch
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'   # every Monday 09:00 UTC (staggered)
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.arch
+      - 'input/**'
+      - 'assets/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-arch
+      upstream_image: archlinux:latest
+      dockerfile: Dockerfile.arch
+      # Arch Linux only publishes official images for amd64
+      platforms: linux/amd64
+    secrets: inherit

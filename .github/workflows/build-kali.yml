@@ -1,0 +1,22 @@
+name: Build Kali
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'   # every Monday 08:00 UTC (staggered)
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.kali
+      - 'input/**'
+      - 'assets/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-kali
+      upstream_image: kalilinux/kali-rolling:latest
+      dockerfile: Dockerfile.kali
+      platforms: linux/amd64,linux/arm64
+    secrets: inherit

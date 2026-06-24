@@ -1,0 +1,22 @@
+name: Build Alpine
+
+on:
+  schedule:
+    - cron: '0 10 * * 1'  # every Monday 10:00 UTC (staggered)
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.alpine
+      - 'input/**'
+      - 'assets/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-alpine
+      upstream_image: alpine:latest
+      dockerfile: Dockerfile.alpine
+      platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
+    secrets: inherit

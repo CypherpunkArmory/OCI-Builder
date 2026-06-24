@@ -1,0 +1,45 @@
+# Stage 1: build the arch-specific artifacts that must not ship with their build deps
+FROM alpine:latest AS builder
+
+RUN apk update && apk add --no-cache build-base busybox-static
+
+COPY input/disableselinux.c /tmp/disableselinux.c
+RUN mkdir /build \
+    && gcc -shared -fPIC /tmp/disableselinux.c -o /build/libdisableselinux.so \
+    && cp /bin/busybox.static /build/busybox
+
+# Stage 2: the real rootfs — no build toolchain
+FROM alpine:latest
+
+RUN printf 'https://dl-cdn.alpinelinux.org/alpine/latest-stable/main\nhttps://dl-cdn.alpinelinux.org/alpine/latest-stable/community\n' \
+    > /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache \
+      busybox-suid bash sudo dropbear mesa-gl xvfb x11vnc xsetroot xterm \
+      twm expect shadow wget curl pulseaudio && \
+    rm -rf /var/cache/apk/*
+
+RUN printf 'auth sufficient pam_shells.so\n' > /etc/pam.d/chsh
+
+RUN printf '#!/bin/sh\nunset LD_PRELOAD\nunset LD_LIBRARY_PATH\nexport LIBGL_ALWAYS_SOFTWARE=1\n' \
+    > /etc/profile.d/userland.sh && chmod +x /etc/profile.d/userland.sh
+
+COPY --from=builder /build/busybox              /support/busybox
+COPY --from=builder /build/libdisableselinux.so /support/libdisableselinux.so
+COPY assets/all/addNonRootUser.sh               /support/addNonRootUser.sh
+COPY assets/all/extractFilesystem.sh            /support/extractFilesystem.sh
+COPY assets/all/ld.so.preload                   /support/ld.so.preload
+COPY assets/all/nosudo                          /support/nosudo
+COPY assets/all/startSSHServer.sh               /support/startSSHServer.sh
+COPY assets/all/startVNCServer.sh               /support/startVNCServer.sh
+COPY assets/all/startVNCServerStep2.sh          /support/startVNCServerStep2.sh
+COPY assets/all/startXSDLServer.sh              /support/startXSDLServer.sh
+COPY assets/all/startXSDLServerStep2.sh         /support/startXSDLServerStep2.sh
+COPY assets/all/userland_profile.sh             /support/userland_profile.sh
+
+RUN chmod a+x /support/busybox \
+              /support/libdisableselinux.so \
+              /support/nosudo \
+              /support/*.sh \
+    && chmod a-w /support/* \
+    && chmod a-w /support

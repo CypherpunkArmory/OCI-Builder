@@ -1,20 +1,34 @@
-name: Build and Push
+name: Build and Push Image (reusable)
 
 on:
-  schedule:
-    - cron: '0 6 * * 1'  # every Monday 06:00 UTC
-  workflow_dispatch:
-  push:
-    branches: [master]
-    paths:
-      - Dockerfile
-      - 'input/**'
-      - 'assets/**'
+  workflow_call:
+    inputs:
+      image_name:
+        description: Name of the image on the registry (e.g. userland-debian)
+        required: true
+        type: string
+      upstream_image:
+        description: Upstream base image to track for change detection (e.g. debian:latest)
+        required: true
+        type: string
+      dockerfile:
+        description: Dockerfile to build from (e.g. Dockerfile.debian)
+        required: true
+        type: string
+      platforms:
+        description: Comma-separated buildx platform list
+        required: true
+        type: string
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
 
 jobs:
   # -----------------------------------------------------------------------
-  # On scheduled runs, skip the build if upstream debian:latest hasn't
-  # changed since we last pushed.  All other triggers always build.
+  # On scheduled runs, skip the build if the upstream base image digest
+  # hasn't changed since we last pushed.  All other triggers always build.
   # -----------------------------------------------------------------------
   check-upstream:
     runs-on: ubuntu-latest
@@ -26,9 +40,10 @@ jobs:
         id: check
         env:
           OWNER: ${{ github.repository_owner }}
+          IMAGE_NAME: ${{ inputs.image_name }}
+          UPSTREAM_IMAGE: ${{ inputs.upstream_image }}
         run: |
-          GHCR_IMAGE="ghcr.io/$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')/userland-debian"
-          UPSTREAM=$(docker manifest inspect debian:latest 2>/dev/null \
+          UPSTREAM=$(docker manifest inspect "$UPSTREAM_IMAGE" 2>/dev/null \
             | sha256sum | cut -d' ' -f1)
           echo "upstream_digest=$UPSTREAM" >> "$GITHUB_OUTPUT"
 
@@ -37,7 +52,8 @@ jobs:
             exit 0
           fi
 
-          LAST=$(docker manifest inspect "${GHCR_IMAGE}:latest" 2>/dev/null \
+          GHCR_IMAGE="ghcr.io/$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')/${IMAGE_NAME}:latest"
+          LAST=$(docker manifest inspect "$GHCR_IMAGE" 2>/dev/null \
             | jq -r '.config.Labels["userland.upstream-digest"] // ""' \
             || echo "")
 
@@ -55,14 +71,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write  # needed to push to GHCR
+      packages: write
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm,arm64,386
 
       - uses: docker/setup-buildx-action@v3
 
@@ -94,16 +108,17 @@ jobs:
         id: tags
         env:
           DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_NAME: ${{ inputs.image_name }}
           DATE: ${{ steps.date.outputs.value }}
           OWNER: ${{ github.repository_owner }}
         run: |
-          GHCR="ghcr.io/$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')/userland-debian"
+          GHCR="ghcr.io/$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')/${IMAGE_NAME}"
           {
             echo "${GHCR}:latest"
             echo "${GHCR}:${DATE}"
             if [ -n "$DH_USER" ]; then
-              echo "${DH_USER}/userland-debian:latest"
-              echo "${DH_USER}/userland-debian:${DATE}"
+              echo "${DH_USER}/${IMAGE_NAME}:latest"
+              echo "${DH_USER}/${IMAGE_NAME}:${DATE}"
             fi
           } > /tmp/tags.txt
           echo "list<<EOF" >> "$GITHUB_OUTPUT"
@@ -114,12 +129,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
+          file: ${{ inputs.dockerfile }}
+          platforms: ${{ inputs.platforms }}
           push: true
           labels: |
             userland.upstream-digest=${{ needs.check-upstream.outputs.upstream_digest }}
             org.opencontainers.image.created=${{ steps.date.outputs.value }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           tags: ${{ steps.tags.outputs.list }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ inputs.image_name }}
+          cache-to: type=gha,scope=${{ inputs.image_name }},mode=max
