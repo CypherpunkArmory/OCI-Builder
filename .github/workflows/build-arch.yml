@@ -9,7 +9,8 @@ on:
     paths:
       - Dockerfile.arch
       - 'input/**'
-      - 'assets/**'
+      - 'assets/common/**'
+      - 'assets/arch/**'
 
 jobs:
   build:

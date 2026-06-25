@@ -9,7 +9,7 @@ on:
     paths:
       - Dockerfile.ubuntu
       - 'input/**'
-      - 'assets/**'
+      - 'assets/common/**'
 
 jobs:
   build:

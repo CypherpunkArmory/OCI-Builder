@@ -9,7 +9,7 @@ on:
     paths:
       - Dockerfile.kali
       - 'input/**'
-      - 'assets/**'
+      - 'assets/common/**'
 
 jobs:
   build:

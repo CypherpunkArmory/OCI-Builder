@@ -9,7 +9,8 @@ on:
     paths:
       - Dockerfile.debian
       - 'input/**'
-      - 'assets/**'
+      - 'assets/common/**'
+      - 'assets/debian/**'
 
 jobs:
   build:
