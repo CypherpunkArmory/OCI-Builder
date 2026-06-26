@@ -27,7 +27,7 @@ RUN sed -i 's/^#DisableSandbox/DisableSandbox/' /etc/pacman.conf && \
 
 RUN pacman -Sy --noconfirm
 
-RUN pacman -S --noconfirm --needed \
+RUN pacman -S --noconfirm --needed --overwrite '*' \
       sudo dropbear x11vnc xterm xorg-twm xorg-server-xvfb xorg-xsetroot expect gzip
 
 RUN yes | pacman -Scc
