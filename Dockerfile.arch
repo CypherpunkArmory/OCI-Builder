@@ -2,7 +2,13 @@
 # menci/archlinuxarm provides amd64 + arm64 + arm/v7 in a single multi-arch image.
 FROM menci/archlinuxarm:latest AS builder
 
-RUN pacman -Syu --noconfirm && \
+# Refresh keyrings before upgrade; stale images fail signature checks on newer packages.
+# archlinuxarm-keyring may not exist on amd64 variant, so its failure is silenced.
+RUN pacman -Sy --noconfirm archlinux-keyring && \
+    { pacman -Sy --noconfirm archlinuxarm-keyring 2>/dev/null || true; } && \
+    pacman-key --init && \
+    pacman-key --populate && \
+    pacman -Syu --noconfirm && \
     pacman -S --noconfirm --needed --overwrite '*' glibc base-devel linux-api-headers busybox && \
     yes | pacman -Scc
 
@@ -14,7 +20,11 @@ RUN mkdir /build \
 # Stage 2: the real rootfs — no build toolchain
 FROM menci/archlinuxarm:latest
 
-RUN pacman -Syu --noconfirm && \
+RUN pacman -Sy --noconfirm archlinux-keyring && \
+    { pacman -Sy --noconfirm archlinuxarm-keyring 2>/dev/null || true; } && \
+    pacman-key --init && \
+    pacman-key --populate && \
+    pacman -Syu --noconfirm && \
     pacman -S --noconfirm --needed \
       sudo dropbear x11vnc xterm xorg-twm xorg-server-xvfb xorg-xsetroot expect gzip && \
     yes | pacman -Scc
