@@ -2,14 +2,9 @@
 # menci/archlinuxarm provides amd64 + arm64 + arm/v7 in a single multi-arch image.
 FROM menci/archlinuxarm:latest AS builder
 
-# pacman 7.0+ sandboxing requires an 'alpm' user that doesn't exist in Docker.
-# Refresh keyrings before upgrade; stale images fail signature checks on newer packages.
-# archlinuxarm-keyring may not exist on amd64 variant, so its failure is silenced.
-RUN sed -i 's/^#DisableSandbox/DisableSandbox/' /etc/pacman.conf && \
-    pacman -Sy --noconfirm archlinux-keyring && \
-    { pacman -Sy --noconfirm archlinuxarm-keyring 2>/dev/null || true; } && \
-    pacman-key --init && \
-    pacman-key --populate && \
+# pacman 7.0+ sandbox requires an 'alpm' user that doesn't exist in Docker.
+# SigLevel=Never avoids keyring entropy/init issues in QEMU CI environments.
+RUN sed -i 's/^#DisableSandbox/DisableSandbox/; s/^SigLevel\s*=.*/SigLevel = Never/' /etc/pacman.conf && \
     pacman -Syu --noconfirm && \
     pacman -S --noconfirm --needed --overwrite '*' glibc base-devel linux-api-headers busybox && \
     yes | pacman -Scc
@@ -22,11 +17,7 @@ RUN mkdir /build \
 # Stage 2: the real rootfs — no build toolchain
 FROM menci/archlinuxarm:latest
 
-RUN sed -i 's/^#DisableSandbox/DisableSandbox/' /etc/pacman.conf && \
-    pacman -Sy --noconfirm archlinux-keyring && \
-    { pacman -Sy --noconfirm archlinuxarm-keyring 2>/dev/null || true; } && \
-    pacman-key --init && \
-    pacman-key --populate && \
+RUN sed -i 's/^#DisableSandbox/DisableSandbox/; s/^SigLevel\s*=.*/SigLevel = Never/' /etc/pacman.conf && \
     pacman -Syu --noconfirm && \
     pacman -S --noconfirm --needed \
       sudo dropbear x11vnc xterm xorg-twm xorg-server-xvfb xorg-xsetroot expect gzip && \
