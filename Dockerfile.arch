@@ -1,14 +1,6 @@
-# syntax=docker/dockerfile:1
-# Stage 0: platform selection
-# Official archlinux:latest is amd64-only; ARM platforms use menci/archlinuxarm.
-ARG TARGETARCH=amd64
-FROM archlinux:latest          AS base_amd64
-FROM menci/archlinuxarm:latest AS base_arm64
-FROM menci/archlinuxarm:latest AS base_arm
-FROM base_${TARGETARCH}        AS base
-
 # Stage 1: build arch-specific artifacts that must not ship with their build deps
-FROM base AS builder
+# menci/archlinuxarm provides amd64 + arm64 + arm/v7 in a single multi-arch image.
+FROM menci/archlinuxarm:latest AS builder
 
 RUN pacman -Syu --noconfirm && \
     pacman -S --noconfirm --needed --overwrite '*' glibc base-devel linux-api-headers busybox && \
@@ -20,7 +12,7 @@ RUN mkdir /build \
     && cp /usr/bin/busybox /build/busybox
 
 # Stage 2: the real rootfs — no build toolchain
-FROM base
+FROM menci/archlinuxarm:latest
 
 RUN pacman -Syu --noconfirm && \
     pacman -S --noconfirm --needed \
