@@ -6,7 +6,8 @@ FROM menci/archlinuxarm:latest AS builder
 # SigLevel=Never avoids keyring entropy/init issues under QEMU in CI.
 # --overwrite '*' handles file conflicts from package splits (e.g. gcc-libs → libgcc+libstdc++).
 RUN sed -i 's/^#DisableSandbox/DisableSandbox/' /etc/pacman.conf && \
-    sed -i '/^SigLevel[[:space:]]/c\SigLevel = Never' /etc/pacman.conf
+    sed -i '/^SigLevel[[:space:]]/c\SigLevel = Never' /etc/pacman.conf && \
+    sed -i '/^DisableSandbox/a NoExtract = etc/resolv.conf etc/hosts' /etc/pacman.conf
 
 RUN pacman -Syu --noconfirm --overwrite '*'
 
@@ -23,7 +24,8 @@ RUN mkdir /build \
 FROM menci/archlinuxarm:latest
 
 RUN sed -i 's/^#DisableSandbox/DisableSandbox/' /etc/pacman.conf && \
-    sed -i '/^SigLevel[[:space:]]/c\SigLevel = Never' /etc/pacman.conf
+    sed -i '/^SigLevel[[:space:]]/c\SigLevel = Never' /etc/pacman.conf && \
+    sed -i '/^DisableSandbox/a NoExtract = etc/resolv.conf etc/hosts' /etc/pacman.conf
 
 RUN pacman -Syu --noconfirm --overwrite '*'
 
