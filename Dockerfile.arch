@@ -4,10 +4,15 @@ FROM menci/archlinuxarm:latest AS builder
 
 # pacman 7.0+ sandbox requires an 'alpm' user that doesn't exist in Docker.
 # SigLevel=Never avoids keyring entropy/init issues in QEMU CI environments.
-RUN sed -i 's/^#DisableSandbox/DisableSandbox/; s/^SigLevel\s*=.*/SigLevel = Never/' /etc/pacman.conf && \
-    pacman -Syu --noconfirm && \
-    pacman -S --noconfirm --needed --overwrite '*' glibc base-devel linux-api-headers busybox && \
-    yes | pacman -Scc
+# Use -Sy (sync only, no full upgrade) to avoid slow QEMU system upgrades.
+RUN sed -i 's/^#DisableSandbox/DisableSandbox/' /etc/pacman.conf && \
+    sed -i '/^SigLevel[[:space:]]/c\SigLevel = Never' /etc/pacman.conf
+
+RUN pacman -Sy --noconfirm
+
+RUN pacman -S --noconfirm --needed --overwrite '*' glibc base-devel linux-api-headers busybox
+
+RUN yes | pacman -Scc
 
 COPY input/disableselinux.c /tmp/disableselinux.c
 RUN mkdir /build \
@@ -17,11 +22,15 @@ RUN mkdir /build \
 # Stage 2: the real rootfs — no build toolchain
 FROM menci/archlinuxarm:latest
 
-RUN sed -i 's/^#DisableSandbox/DisableSandbox/; s/^SigLevel\s*=.*/SigLevel = Never/' /etc/pacman.conf && \
-    pacman -Syu --noconfirm && \
-    pacman -S --noconfirm --needed \
-      sudo dropbear x11vnc xterm xorg-twm xorg-server-xvfb xorg-xsetroot expect gzip && \
-    yes | pacman -Scc
+RUN sed -i 's/^#DisableSandbox/DisableSandbox/' /etc/pacman.conf && \
+    sed -i '/^SigLevel[[:space:]]/c\SigLevel = Never' /etc/pacman.conf
+
+RUN pacman -Sy --noconfirm
+
+RUN pacman -S --noconfirm --needed \
+      sudo dropbear x11vnc xterm xorg-twm xorg-server-xvfb xorg-xsetroot expect gzip
+
+RUN yes | pacman -Scc
 
 RUN printf '#!/bin/sh\nunset LD_PRELOAD\nunset LD_LIBRARY_PATH\nexport LIBGL_ALWAYS_SOFTWARE=1\n' \
     > /etc/profile.d/userland.sh && chmod +x /etc/profile.d/userland.sh
