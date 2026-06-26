@@ -19,6 +19,8 @@ RUN printf 'https://dl-cdn.alpinelinux.org/alpine/latest-stable/main\nhttps://dl
       twm expect shadow wget curl pulseaudio && \
     rm -rf /var/cache/apk/*
 
+RUN chmod +r /bin/bbsuid
+
 RUN printf 'auth sufficient pam_shells.so\n' > /etc/pam.d/chsh
 
 RUN printf '#!/bin/sh\nunset LD_PRELOAD\nunset LD_LIBRARY_PATH\nexport LIBGL_ALWAYS_SOFTWARE=1\n' \
