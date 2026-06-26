@@ -17,8 +17,8 @@ jobs:
     uses: ./.github/workflows/build-image.yml
     with:
       image_name: userland-arch
-      upstream_image: archlinux:latest
+      # Track the ARM image; archlinux:latest (amd64) is also a base but single-arch
+      upstream_image: menci/archlinuxarm:latest
       dockerfile: Dockerfile.arch
-      # Arch Linux only publishes official images for amd64
-      platforms: linux/amd64
+      platforms: linux/amd64,linux/arm64,linux/arm/v7
     secrets: inherit

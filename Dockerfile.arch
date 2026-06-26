@@ -1,5 +1,14 @@
-# Stage 1: build the arch-specific artifacts that must not ship with their build deps
-FROM archlinux:latest AS builder
+# syntax=docker/dockerfile:1
+# Stage 0: platform selection
+# Official archlinux:latest is amd64-only; ARM platforms use menci/archlinuxarm.
+ARG TARGETARCH=amd64
+FROM archlinux:latest          AS base_amd64
+FROM menci/archlinuxarm:latest AS base_arm64
+FROM menci/archlinuxarm:latest AS base_arm
+FROM base_${TARGETARCH}        AS base
+
+# Stage 1: build arch-specific artifacts that must not ship with their build deps
+FROM base AS builder
 
 RUN pacman -Syu --noconfirm && \
     pacman -S --noconfirm --needed --overwrite '*' glibc base-devel linux-api-headers busybox && \
@@ -11,8 +20,7 @@ RUN mkdir /build \
     && cp /usr/bin/busybox /build/busybox
 
 # Stage 2: the real rootfs — no build toolchain
-# Arch Linux only publishes amd64 images; see build-arch.yml for platform list.
-FROM archlinux:latest
+FROM base
 
 RUN pacman -Syu --noconfirm && \
     pacman -S --noconfirm --needed \
