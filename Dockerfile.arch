@@ -3,12 +3,12 @@
 FROM menci/archlinuxarm:latest AS builder
 
 # pacman 7.0+ sandbox requires an 'alpm' user that doesn't exist in Docker.
-# SigLevel=Never avoids keyring entropy/init issues in QEMU CI environments.
-# Use -Sy (sync only, no full upgrade) to avoid slow QEMU system upgrades.
+# SigLevel=Never avoids keyring entropy/init issues under QEMU in CI.
+# --overwrite '*' handles file conflicts from package splits (e.g. gcc-libs → libgcc+libstdc++).
 RUN sed -i 's/^#DisableSandbox/DisableSandbox/' /etc/pacman.conf && \
     sed -i '/^SigLevel[[:space:]]/c\SigLevel = Never' /etc/pacman.conf
 
-RUN pacman -Sy --noconfirm
+RUN pacman -Syu --noconfirm --overwrite '*'
 
 RUN pacman -S --noconfirm --needed --overwrite '*' glibc base-devel linux-api-headers busybox
 
@@ -25,7 +25,7 @@ FROM menci/archlinuxarm:latest
 RUN sed -i 's/^#DisableSandbox/DisableSandbox/' /etc/pacman.conf && \
     sed -i '/^SigLevel[[:space:]]/c\SigLevel = Never' /etc/pacman.conf
 
-RUN pacman -Sy --noconfirm
+RUN pacman -Syu --noconfirm --overwrite '*'
 
 RUN pacman -S --noconfirm --needed --overwrite '*' \
       sudo dropbear x11vnc xterm xorg-twm xorg-server-xvfb xorg-xsetroot expect gzip
