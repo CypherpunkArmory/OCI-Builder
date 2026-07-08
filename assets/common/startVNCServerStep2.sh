@@ -47,4 +47,4 @@ do
   sleep 1
 done
 cd ~
-DISPLAY=localhost:${VNC_DISPLAY} xterm -geometry 80x24+0+0 -e /bin/bash --login &
+DISPLAY=:${VNC_DISPLAY} xterm -geometry 80x24+0+0 -e /bin/bash --login &
