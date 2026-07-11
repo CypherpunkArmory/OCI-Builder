@@ -1,0 +1,24 @@
+name: Build Debian XFCE
+
+on:
+  schedule:
+    - cron: '0 11 * * 1'  # every Monday 11:00 UTC (staggered)
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.debian_xfce
+      - 'input/**'
+      - 'assets/common/**'
+      - 'assets/debian/**'
+      - 'assets/xfce/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-debian_xfce
+      upstream_image: debian:latest
+      dockerfile: Dockerfile.debian_xfce
+      platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
+    secrets: inherit

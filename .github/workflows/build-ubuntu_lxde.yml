@@ -1,0 +1,23 @@
+name: Build Ubuntu LXDE
+
+on:
+  schedule:
+    - cron: '0 16 * * 1'  # every Monday 16:00 UTC (staggered)
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.ubuntu_lxde
+      - 'input/**'
+      - 'assets/common/**'
+      - 'assets/lxde/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-ubuntu_lxde
+      upstream_image: ubuntu:latest
+      dockerfile: Dockerfile.ubuntu_lxde
+      platforms: linux/amd64,linux/arm64,linux/arm/v7
+    secrets: inherit

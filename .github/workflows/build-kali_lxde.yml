@@ -1,0 +1,23 @@
+name: Build Kali LXDE
+
+on:
+  schedule:
+    - cron: '0 14 * * 1'  # every Monday 14:00 UTC (staggered)
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.kali_lxde
+      - 'input/**'
+      - 'assets/common/**'
+      - 'assets/lxde/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-kali_lxde
+      upstream_image: kalilinux/kali-rolling:latest
+      dockerfile: Dockerfile.kali_lxde
+      platforms: linux/amd64,linux/arm64
+    secrets: inherit

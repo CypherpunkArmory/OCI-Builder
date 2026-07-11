@@ -1,0 +1,23 @@
+name: Build Kali XFCE
+
+on:
+  schedule:
+    - cron: '0 13 * * 1'  # every Monday 13:00 UTC (staggered)
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.kali_xfce
+      - 'input/**'
+      - 'assets/common/**'
+      - 'assets/xfce/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-kali_xfce
+      upstream_image: kalilinux/kali-rolling:latest
+      dockerfile: Dockerfile.kali_xfce
+      platforms: linux/amd64,linux/arm64
+    secrets: inherit

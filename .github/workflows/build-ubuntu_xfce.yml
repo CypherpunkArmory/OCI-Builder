@@ -1,0 +1,23 @@
+name: Build Ubuntu XFCE
+
+on:
+  schedule:
+    - cron: '0 15 * * 1'  # every Monday 15:00 UTC (staggered)
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.ubuntu_xfce
+      - 'input/**'
+      - 'assets/common/**'
+      - 'assets/xfce/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-ubuntu_xfce
+      upstream_image: ubuntu:latest
+      dockerfile: Dockerfile.ubuntu_xfce
+      platforms: linux/amd64,linux/arm64,linux/arm/v7
+    secrets: inherit
