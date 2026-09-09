@@ -17,7 +17,19 @@ FROM debian:latest
 RUN printf '#!/bin/sh\nunset LD_PRELOAD\nunset LD_LIBRARY_PATH\nexport LIBGL_ALWAYS_SOFTWARE=1\n' \
     > /etc/profile.d/userland.sh && chmod +x /etc/profile.d/userland.sh
 
+# systemd + systemd-sysv are a hard requirement of the AVF backend, not a
+# convenience: avf-init pivot_roots into /lib/systemd/systemd and runs it as
+# PID 1 when present, which is what makes `systemctl` -- and therefore Docker,
+# podman and any packaged .service unit -- work inside the VM. Without them
+# avf-init falls back to a chroot in which the distro's own init never runs and
+# systemctl reports "System has not been booted with systemd as init system".
+# Requested explicitly rather than left to chance: debian shipped systemd *unit
+# files* but not the binary, and ubuntu/kali only got it as an incidental
+# transitive dep -- either could silently regress and break init for every VM
+# session. systemd-sysv provides the /sbin/init -> systemd link avf-init execs.
 RUN apt-get update && apt-get install -y --no-install-recommends \
+      systemd \
+      systemd-sysv \
       sudo \
       dropbear \
       libgl1 \

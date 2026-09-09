@@ -31,7 +31,15 @@ RUN sed -i 's/^#DisableSandbox/DisableSandbox/' /etc/pacman.conf && \
 
 RUN pacman -Syu --noconfirm --overwrite '*'
 
+# systemd is a hard requirement of the AVF backend, not a convenience: avf-init
+# pivot_roots into /lib/systemd/systemd and runs it as PID 1 when present, which
+# is what makes `systemctl` -- and therefore Docker, podman and any packaged
+# .service unit -- work inside the VM. Without it avf-init falls back to a
+# chroot in which the distro's own init never runs. Requested explicitly even
+# though the base image ships systemd as part of its base group: that is
+# incidental, and an upstream change could silently regress it.
 RUN pacman -S --noconfirm --needed --overwrite '*' \
+      systemd \
       sudo dropbear x11vnc xterm xorg-twm xorg-server-xvfb xorg-xsetroot expect gzip
 
 RUN yes | pacman -Scc
