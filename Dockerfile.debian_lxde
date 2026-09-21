@@ -65,8 +65,13 @@ RUN printf '%s\n' '#!/bin/sh' \
     && sed -i 's|^Exec=lxpolkit$|Exec=lxpolkit-if-systemd|; s|^TryExec=lxpolkit$|TryExec=lxpolkit-if-systemd|' \
          /etc/xdg/autostart/lxpolkit.desktop \
     && [ -f /etc/xdg/lxsession/LXDE/desktop.conf ] \
-    && sed -i 's|^polkit/command=lxpolkit$|polkit/command=lxpolkit-if-systemd|' \
-         /etc/xdg/lxsession/LXDE/desktop.conf
+    && if grep -q '^polkit/command=' /etc/xdg/lxsession/LXDE/desktop.conf; then \
+         sed -i 's|^polkit/command=.*|polkit/command=lxpolkit-if-systemd|' \
+           /etc/xdg/lxsession/LXDE/desktop.conf; \
+       else \
+         sed -i '/^\[Session\]/a polkit/command=lxpolkit-if-systemd' \
+           /etc/xdg/lxsession/LXDE/desktop.conf; \
+       fi
 
 COPY --from=builder /build/busybox              /support/busybox
 COPY --from=builder /build/libdisableselinux.so /support/libdisableselinux.so
