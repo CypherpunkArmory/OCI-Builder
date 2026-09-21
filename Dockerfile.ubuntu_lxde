@@ -43,7 +43,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       wget \
       curl \
       pulseaudio \
-    && apt-get install -y lxde \
+    && apt-get install -y lxde dbus-x11 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN sed -i 's/force_color_prompt=/#force_color_prompt=/g' /etc/skel/.bashrc
