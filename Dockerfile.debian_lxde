@@ -44,6 +44,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get install -y lxde dbus-x11 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# A polkit authentication agent only works where polkit can actually answer:
+# it needs systemd-logind to own a session for the process and polkitd on the
+# system bus. proot has no init, so neither exists, and lxpolkit greets every
+# single login with a GTK error dialog reading "No session for pid <n>" --
+# polkit's own message, from sd_pid_get_session() failing against an empty
+# /run/systemd/sessions. XFCE never showed it because lxpolkit.desktop carries
+# NotShowIn=...;XFCE;... and LXDE is not on that list.
+#
+# The same image also serves AVF/QEMU sessions, where systemd *is* running and
+# the agent works normally, so this gates it at runtime rather than dropping it
+# from the image. lxpolkit has two independent launchers -- lxsession's
+# polkit/command and the XDG autostart entry -- and both must be routed through
+# the wrapper or the other one still starts it.
+RUN printf '%s\n' '#!/bin/sh' \
+      '[ -d /run/systemd/system ] || exit 0' \
+      'exec lxpolkit "$@"' > /usr/local/bin/lxpolkit-if-systemd \
+    && chmod 755 /usr/local/bin/lxpolkit-if-systemd \
+    && [ -f /etc/xdg/autostart/lxpolkit.desktop ] \
+    && sed -i 's|^Exec=lxpolkit$|Exec=lxpolkit-if-systemd|; s|^TryExec=lxpolkit$|TryExec=lxpolkit-if-systemd|' \
+         /etc/xdg/autostart/lxpolkit.desktop \
+    && [ -f /etc/xdg/lxsession/LXDE/desktop.conf ] \
+    && sed -i 's|^polkit/command=lxpolkit$|polkit/command=lxpolkit-if-systemd|' \
+         /etc/xdg/lxsession/LXDE/desktop.conf
+
 COPY --from=builder /build/busybox              /support/busybox
 COPY --from=builder /build/libdisableselinux.so /support/libdisableselinux.so
 COPY assets/common/ /support/
