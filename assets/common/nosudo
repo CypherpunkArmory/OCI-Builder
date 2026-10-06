@@ -90,8 +90,12 @@ elif [[ $@ ]]; then
 	fi
 	while [[ "$1" =~ "=" ]]; do before_cmd+="export $1;"; shift; done
 	prog="$1"; shift; args="$@"
-	if [ -n "$SHELL" ]; then
-		alias="$($SHELL -i -c "alias $prog" 2>/dev/null)"
+	# The lookup shell is interactive, and on distros whose bashrc sources /etc/profile.d
+	# (Fedora) that runs UserLAnd's first-login script again -- which calls sudo, which
+	# looked up its alias in another interactive shell, and so on without end. A nested
+	# call skips the lookup, and only real alias output is taken from the shell.
+	if [ -n "$SHELL" ] && [ -z "$NOSUDO_ALIAS_LOOKUP" ]; then
+		alias="$(NOSUDO_ALIAS_LOOKUP=1 $SHELL -i -c "alias $prog" 2>/dev/null | grep "^alias $prog=")"
 		alias="$(echo "$alias" | sed -r "s/^[^=]+=([\"']?)(.*)\1$/\2/")"
 	fi
 	[ -n "$alias" ] && path="$(which "$alias" 2>/dev/null)"
