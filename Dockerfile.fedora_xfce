@@ -1,0 +1,68 @@
+# Stage 1: build the arch-specific artifacts that must not ship with their build deps.
+# Built on Fedora itself so libdisableselinux.so links against the same glibc it
+# is preloaded into.
+FROM fedora:latest AS builder
+
+RUN dnf install -y --setopt=install_weak_deps=False gcc busybox \
+    && dnf clean all
+
+COPY input/disableselinux.c /tmp/disableselinux.c
+RUN mkdir /build \
+    && gcc -shared -fPIC /tmp/disableselinux.c -o /build/libdisableselinux.so \
+    && cp /usr/sbin/busybox /build/busybox
+
+# Stage 2: the real rootfs — no build toolchain
+FROM fedora:latest
+
+RUN printf '#!/bin/sh\nunset LD_PRELOAD\nunset LD_LIBRARY_PATH\nexport LIBGL_ALWAYS_SOFTWARE=1\n' \
+    > /etc/profile.d/userland.sh && chmod +x /etc/profile.d/userland.sh
+
+# systemd is a hard requirement of the AVF backend, not a convenience: avf-init
+# pivot_roots into /lib/systemd/systemd and runs it as PID 1 when present, which
+# is what makes `systemctl` -- and therefore Docker, podman and any packaged
+# .service unit -- work inside the VM. The fedora container image leaves it out.
+#
+# Fedora has no tightvncserver; tigervnc-x11-server provides Xvnc and
+# tigervnc-server-common vncpasswd, which assets/fedora/startVNCServerStep2.sh
+# drives directly. twm is no longer packaged, so openbox stands in as the
+# minimal image's window manager.
+RUN dnf install -y --setopt=install_weak_deps=False \
+      systemd \
+      sudo \
+      passwd \
+      util-linux \
+      procps-ng \
+      hostname \
+      iproute \
+      which \
+      less \
+      nano \
+      dropbear \
+      tigervnc-x11-server \
+      tigervnc-server-common \
+      xterm \
+      openbox \
+      xsetroot \
+      xorg-x11-fonts-misc \
+      dejavu-sans-mono-fonts \
+      mesa-dri-drivers \
+      mesa-libGL \
+      wget \
+      pulseaudio-utils \
+    && dnf group install -y --setopt=install_weak_deps=False xfce-desktop \
+    && dnf install -y --setopt=install_weak_deps=False dbus-x11 \
+    && dnf clean all
+
+COPY --from=builder /build/busybox              /support/busybox
+COPY --from=builder /build/libdisableselinux.so /support/libdisableselinux.so
+COPY assets/common/ /support/
+COPY assets/fedora/ /support/
+COPY assets/fedora_xfce/ /support/
+
+RUN chmod a+x /support/busybox \
+              /support/libdisableselinux.so \
+              /support/nosudo \
+              /support/userland-session \
+              /support/*.sh \
+    && chmod a-w /support/* \
+    && chmod a-w /support

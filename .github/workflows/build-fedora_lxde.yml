@@ -1,0 +1,25 @@
+name: Build Fedora LXDE
+
+on:
+  schedule:
+    - cron: '0 19 * * 1'  # every Monday 19:00 UTC (staggered)
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.fedora_lxde
+      - 'input/**'
+      - 'assets/common/**'
+      - 'assets/fedora/**'
+      - 'assets/fedora_lxde/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-fedora_lxde
+      upstream_image: fedora:latest
+      dockerfile: Dockerfile.fedora_lxde
+      # fedora:latest is published for amd64 and arm64 only -- no arm/v7 or 386.
+      platforms: linux/amd64,linux/arm64
+    secrets: inherit

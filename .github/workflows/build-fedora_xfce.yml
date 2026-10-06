@@ -1,0 +1,25 @@
+name: Build Fedora XFCE
+
+on:
+  schedule:
+    - cron: '0 18 * * 1'  # every Monday 18:00 UTC (staggered)
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.fedora_xfce
+      - 'input/**'
+      - 'assets/common/**'
+      - 'assets/fedora/**'
+      - 'assets/fedora_xfce/**'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-fedora_xfce
+      upstream_image: fedora:latest
+      dockerfile: Dockerfile.fedora_xfce
+      # fedora:latest is published for amd64 and arm64 only -- no arm/v7 or 386.
+      platforms: linux/amd64,linux/arm64
+    secrets: inherit
