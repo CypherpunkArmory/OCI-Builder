@@ -46,6 +46,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       pulseaudio \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# GNU coreutils instead of Ubuntu's default Rust uutils. uutils is one multicall
+# binary that every utility is a hard link to, and it refuses to run when the
+# utility named in argv[0] doesn't match the executable's own file name
+# ("Security violation: Requested utility `mkdir` does not match executable
+# name"). proot stores hard links as link2symlink stubs, so under proot every
+# coreutils command failed that way -- startSSHServer.sh could not even mkdir
+# /etc/dropbear, and SSH sessions never started.
+RUN apt-get update && apt-get install -y --no-install-recommends --allow-remove-essential \
+      coreutils-from-gnu \
+      coreutils-from-uutils- \
+      rust-coreutils- \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN sed -i 's/force_color_prompt=/#force_color_prompt=/g' /etc/skel/.bashrc
 
 COPY --from=builder /build/busybox              /support/busybox
