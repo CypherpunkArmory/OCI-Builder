@@ -1,0 +1,104 @@
+name: Promote images to latest
+
+# Builds only ever publish :next (see build-image.yml). This is the deliberate human step that
+# makes a tested :next what release builds of UserLAnd pull: it points :latest at the very same
+# multi-arch image -- a registry-side copy, nothing is rebuilt -- so what goes out is exactly
+# what was tested.
+#
+# The :latest being replaced is kept as :previous first, so a bad promotion can be undone by
+# promoting from "previous". Any dated tag a build published (e.g. 20261007) works as the
+# source too, for going further back.
+
+on:
+  workflow_dispatch:
+    inputs:
+      images:
+        description: >-
+          Images to promote: "all", or a comma-separated list of names without the
+          userland- prefix (e.g. "ubuntu,ubuntu_xfce,ubuntu_lxde")
+        required: true
+        default: all
+        type: string
+      from:
+        description: Tag to promote to latest ("next", "previous", or a dated tag like 20261007)
+        required: true
+        default: next
+        type: string
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check DockerHub credentials
+        id: dh
+        env:
+          DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          [ -n "$DH_TOKEN" ] && echo "available=true" >> "$GITHUB_OUTPUT" \
+                             || echo "available=false" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        if: steps.dh.outputs.available == 'true'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Promote
+        env:
+          IMAGES: ${{ inputs.images }}
+          FROM: ${{ inputs.from }}
+          OWNER: ${{ github.repository_owner }}
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          set -euo pipefail
+          GHCR="ghcr.io/$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
+
+          # Every image a build workflow publishes, so "all" can't drift from the real set.
+          KNOWN=$(sed -n 's/^ *image_name: *userland-//p' .github/workflows/build-*.yml | sort -u)
+          if [ "$IMAGES" = "all" ]; then
+            LIST="$KNOWN"
+          else
+            LIST=$(echo "$IMAGES" | tr ',' '\n' | sed 's/^ *//; s/ *$//; s/^userland-//' | grep -v '^$')
+          fi
+
+          # Check everything first, so a typo fails the run before anything has moved.
+          for name in $LIST; do
+            echo "$KNOWN" | grep -qx "$name" || { echo "::error::Unknown image '$name'"; exit 1; }
+            docker buildx imagetools inspect "$GHCR/userland-$name:$FROM" > /dev/null \
+              || { echo "::error::userland-$name has no :$FROM tag"; exit 1; }
+          done
+
+          promote() {  # $1 = repository without tag
+            # Keep the outgoing latest as previous -- except when previous *is* the source,
+            # which would overwrite the very image being restored.
+            if [ "$FROM" != "previous" ] && docker buildx imagetools inspect "$1:latest" > /dev/null 2>&1; then
+              docker buildx imagetools create -t "$1:previous" "$1:latest"
+            fi
+            docker buildx imagetools create -t "$1:latest" "$1:$FROM"
+          }
+
+          for name in $LIST; do
+            echo "::group::userland-$name: $FROM -> latest"
+            promote "$GHCR/userland-$name"
+            if [ -n "$DH_USER" ]; then
+              # The Docker Hub mirror is secondary: UserLAnd pulls from ghcr.io only.
+              promote "$DH_USER/userland-$name" \
+                || echo "::warning::Docker Hub mirror of userland-$name was not promoted"
+            fi
+            docker buildx imagetools inspect "$GHCR/userland-$name:latest" | sed -n 1,3p
+            echo "::endgroup::"
+            echo "- userland-$name: \`$FROM\` → \`latest\`" >> "$GITHUB_STEP_SUMMARY"
+          done

@@ -112,12 +112,16 @@ jobs:
           DATE: ${{ steps.date.outputs.value }}
           OWNER: ${{ github.repository_owner }}
         run: |
+          # Builds publish to :next (and a dated tag) only, never :latest. :latest is what
+          # release builds of UserLAnd pull, and a build that succeeds can still be broken in
+          # UserLAnd (Ubuntu 26.04's uutils coreutils broke every proot session that way), so
+          # it moves only when promote.yml is run by hand after next has been tested.
           GHCR="ghcr.io/$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')/${IMAGE_NAME}"
           {
-            echo "${GHCR}:latest"
+            echo "${GHCR}:next"
             echo "${GHCR}:${DATE}"
             if [ -n "$DH_USER" ]; then
-              echo "${DH_USER}/${IMAGE_NAME}:latest"
+              echo "${DH_USER}/${IMAGE_NAME}:next"
               echo "${DH_USER}/${IMAGE_NAME}:${DATE}"
             fi
           } > /tmp/tags.txt
