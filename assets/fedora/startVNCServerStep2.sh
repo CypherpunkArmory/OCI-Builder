@@ -39,20 +39,27 @@ rm -f /tmp/.X${VNC_DISPLAY}-lock /tmp/.X11-unix/X${VNC_DISPLAY}
 mkdir -p /tmp/.X11-unix 2>/dev/null
 
 cd ~
-Xvnc :${VNC_DISPLAY} -geometry ${DIMENSIONS} -depth 24 \
+# -noreset: an X server otherwise resets whenever its last client disconnects,
+# dropping every client still connecting. The session's first client is
+# xsetroot, which exits at once -- so on a first start, where openbox and the
+# xterm were a moment slower to connect, they were thrown off and the desktop
+# came up as a bare gray screen.
+Xvnc :${VNC_DISPLAY} -geometry ${DIMENSIONS} -depth 24 -noreset \
   -rfbauth $VNC_DIR/passwd -SecurityTypes VncAuth -AlwaysShared \
   > $VNC_DIR/Xvnc.log 2>&1 < /dev/null &
 XVNC_PID=$!
 
-# Wait for the display to accept clients before anything draws on it. UserLAnd
-# connects as soon as the pid file appears, so it is written only after this.
+export DISPLAY=:${VNC_DISPLAY}
+
+# Wait until the display actually answers, not just until its socket exists,
+# before anything draws on it. UserLAnd connects as soon as the pid file
+# appears, so it is written only after this.
 for i in $(seq 1 30); do
-  [ -S /tmp/.X11-unix/X${VNC_DISPLAY} ] && break
+  xsetroot -cursor_name left_ptr > /dev/null 2>&1 && break
   kill -0 $XVNC_PID 2>/dev/null || break
   sleep 1
 done
 
-export DISPLAY=:${VNC_DISPLAY}
 /support/userland-session > $VNC_DIR/session.log 2>&1 < /dev/null &
 xterm -geometry 80x24+0+0 -e /bin/bash --login > /dev/null 2>&1 < /dev/null &
 
