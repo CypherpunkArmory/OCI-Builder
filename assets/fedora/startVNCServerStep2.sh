@@ -42,8 +42,9 @@ cd ~
 # -noreset: an X server otherwise resets whenever its last client disconnects,
 # dropping every client still connecting. The session's first client is
 # xsetroot, which exits at once, and the clients still connecting would be
-# thrown off with it.
-Xvnc :${VNC_DISPLAY} -geometry ${DIMENSIONS} -depth 24 -noreset \
+# thrown off with it. -s 0 turns off the X server's own screen saver, which
+# would otherwise blank an idle desktop after ten minutes.
+Xvnc :${VNC_DISPLAY} -geometry ${DIMENSIONS} -depth 24 -noreset -s 0 \
   -rfbauth $VNC_DIR/passwd -SecurityTypes VncAuth -AlwaysShared \
   > $VNC_DIR/Xvnc.log 2>&1 < /dev/null &
 XVNC_PID=$!

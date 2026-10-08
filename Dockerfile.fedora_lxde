@@ -53,12 +53,14 @@ RUN dnf install -y --setopt=install_weak_deps=False \
       mesa-libGL \
       wget \
       pulseaudio-utils \
-    && dnf group install -y --setopt=install_weak_deps=False --exclude=clipit lxde-desktop \
+    && dnf group install -y --setopt=install_weak_deps=False --exclude=clipit --exclude='xscreensaver*' lxde-desktop \
     && dnf install -y --setopt=install_weak_deps=False dbus-x11 \
     && dnf clean all
 
-# clipit is left out of lxde-desktop: a clipboard manager nothing depends on,
-# whose first-run "Save history" dialog greeted every new desktop.
+# Left out of lxde-desktop, as nothing here depends on them: clipit, a
+# clipboard manager whose first-run "Save history" dialog greeted every new
+# desktop; and xscreensaver, which locked an idle desktop behind the user's
+# password -- and over VNC a screensaver only blanks the viewer anyway.
 #
 # A polkit authentication agent only works where polkit can actually answer:
 # it needs systemd-logind to own a session for the process and polkitd on the

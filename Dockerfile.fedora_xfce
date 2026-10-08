@@ -53,10 +53,14 @@ RUN dnf install -y --setopt=install_weak_deps=False \
       mesa-libGL \
       wget \
       pulseaudio-utils \
-    && dnf group install -y --setopt=install_weak_deps=False xfce-desktop \
+    && dnf group install -y --setopt=install_weak_deps=False --exclude=xfce4-screensaver xfce-desktop \
     && dnf install -y --setopt=install_weak_deps=False dbus-x11 \
     && dnf clean all
 
+# xfce4-screensaver is left out of xfce-desktop: nothing depends on it, and it
+# locked an idle desktop behind the user's password -- and over VNC a
+# screensaver only blanks the viewer anyway.
+#
 # Like lxpolkit in the LXDE images: a polkit authentication agent only works
 # where systemd-logind owns a session for it and polkitd is on the system bus.
 # proot has neither, so xfce-polkit greeted every login with an "XFCE PolicyKit
