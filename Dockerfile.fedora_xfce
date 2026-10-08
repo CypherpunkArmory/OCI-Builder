@@ -53,6 +53,20 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     && dnf install -y --setopt=install_weak_deps=False dbus-x11 \
     && dnf clean all
 
+# Like lxpolkit in the LXDE images: a polkit authentication agent only works
+# where systemd-logind owns a session for it and polkitd is on the system bus.
+# proot has neither, so xfce-polkit greeted every login with an "XFCE PolicyKit
+# Agent" error dialog. xfce4-session depends on the package, so it stays; its
+# autostart entry is routed through a wrapper that starts it only where systemd
+# is running -- AVF/QEMU sessions, which share this image.
+RUN printf '%s\n' '#!/bin/sh' \
+      '[ -d /run/systemd/system ] || exit 0' \
+      'exec /usr/libexec/xfce-polkit "$@"' > /usr/local/bin/xfce-polkit-if-systemd \
+    && chmod 755 /usr/local/bin/xfce-polkit-if-systemd \
+    && grep -q '^Exec=/usr/libexec/xfce-polkit' /etc/xdg/autostart/xfce-polkit.desktop \
+    && sed -i 's|^Exec=/usr/libexec/xfce-polkit|Exec=/usr/local/bin/xfce-polkit-if-systemd|' \
+         /etc/xdg/autostart/xfce-polkit.desktop
+
 COPY --from=builder /build/busybox              /support/busybox
 COPY --from=builder /build/libdisableselinux.so /support/libdisableselinux.so
 COPY assets/common/ /support/
