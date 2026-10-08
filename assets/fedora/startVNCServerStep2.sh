@@ -41,9 +41,8 @@ mkdir -p /tmp/.X11-unix 2>/dev/null
 cd ~
 # -noreset: an X server otherwise resets whenever its last client disconnects,
 # dropping every client still connecting. The session's first client is
-# xsetroot, which exits at once -- so on a first start, where openbox and the
-# xterm were a moment slower to connect, they were thrown off and the desktop
-# came up as a bare gray screen.
+# xsetroot, which exits at once, and the clients still connecting would be
+# thrown off with it.
 Xvnc :${VNC_DISPLAY} -geometry ${DIMENSIONS} -depth 24 -noreset \
   -rfbauth $VNC_DIR/passwd -SecurityTypes VncAuth -AlwaysShared \
   > $VNC_DIR/Xvnc.log 2>&1 < /dev/null &
@@ -61,6 +60,19 @@ for i in $(seq 1 30); do
 done
 
 /support/userland-session > $VNC_DIR/session.log 2>&1 < /dev/null &
-xterm -geometry 80x24+0+0 -e /bin/bash --login > /dev/null 2>&1 < /dev/null &
+
+# The xterm waits for the window manager to take over the screen (the
+# _NET_SUPPORTING_WM_CHECK it sets on the root window), giving up after 10s.
+# Mapped before that, it was not drawn until some input arrived -- the desktop
+# came up a bare gray screen, most often on a first start, where openbox is
+# slowest. In the background, so the pid file -- and so UserLAnd's viewer --
+# does not wait on it.
+(
+  for i in $(seq 1 20); do
+    xprop -root _NET_SUPPORTING_WM_CHECK 2>/dev/null | grep -q 'window id' && break
+    sleep 0.5
+  done
+  exec xterm -geometry 80x24+0+0 -e /bin/bash --login
+) > /dev/null 2>&1 < /dev/null &
 
 echo $XVNC_PID > $PID_FILE
