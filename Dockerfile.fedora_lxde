@@ -49,10 +49,13 @@ RUN dnf install -y --setopt=install_weak_deps=False \
       mesa-libGL \
       wget \
       pulseaudio-utils \
-    && dnf group install -y --setopt=install_weak_deps=False lxde-desktop \
+    && dnf group install -y --setopt=install_weak_deps=False --exclude=clipit lxde-desktop \
     && dnf install -y --setopt=install_weak_deps=False dbus-x11 \
     && dnf clean all
 
+# clipit is left out of lxde-desktop: a clipboard manager nothing depends on,
+# whose first-run "Save history" dialog greeted every new desktop.
+#
 # A polkit authentication agent only works where polkit can actually answer:
 # it needs systemd-logind to own a session for the process and polkitd on the
 # system bus. proot has no init, so neither exists, and lxpolkit would greet
