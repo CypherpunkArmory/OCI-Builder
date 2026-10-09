@@ -20,6 +20,5 @@ jobs:
       image_name: userland-fedora_lxde
       upstream_image: fedora:latest
       dockerfile: Dockerfile.fedora_lxde
-      # fedora:latest is published for amd64 and arm64 only -- no arm/v7 or 386.
       platforms: linux/amd64,linux/arm64
     secrets: inherit

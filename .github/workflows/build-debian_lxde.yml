@@ -20,5 +20,5 @@ jobs:
       image_name: userland-debian_lxde
       upstream_image: debian:latest
       dockerfile: Dockerfile.debian_lxde
-      platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
+      platforms: linux/amd64,linux/arm64
     secrets: inherit
