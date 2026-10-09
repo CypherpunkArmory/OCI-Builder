@@ -37,6 +37,16 @@ if [[ -z "${VNC_DISPLAY}" ]]; then
   VNC_DISPLAY="51"
 fi
 
+# twm (the x-window-manager here) exits at startup in a UTF-8 locale: it then needs a fontset,
+# and xfonts-base alone can't supply one. A VM's session has LANG=C.UTF-8 while proot's
+# usually has no LANG at all, so pin the session to C, as the Alpine and Arch images do.
+cat > /home/$INITIAL_USERNAME/.vnc/xstartup <<'EOF'
+#!/bin/sh
+export XKL_XMODMAP_DISABLE=1
+LANG=C exec /etc/X11/Xsession
+EOF
+chmod 755 /home/$INITIAL_USERNAME/.vnc/xstartup
+
 rm /tmp/.X${VNC_DISPLAY}-lock
 rm /tmp/.X11-unix/X${VNC_DISPLAY}
 tightvncserver -kill :${VNC_DISPLAY}
