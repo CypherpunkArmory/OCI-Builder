@@ -44,6 +44,15 @@ fi
 
 rm /tmp/.X${VNC_DISPLAY}-lock
 rm /tmp/.X11-unix/X${VNC_DISPLAY}
+# TightVNC 1.3.10's X server keeps a buffer about the size of the whole screen on its stack, so
+# at a phone's landscape size (2268x1080 at 32 bits is 9.8MB) it overflows the default 8MB
+# stack and crashes with SIGSEGV as soon as a desktop draws enough -- LXDE's panel did it within
+# a minute. Give it the screen's size plus the usual 8MB.
+STACK_KB=$(( ${DIMENSIONS%x*} * ${DIMENSIONS#*x} * 4 / 1024 + 8192 ))
+if [ "$(ulimit -s)" != "unlimited" ] && [ "$(ulimit -s)" -lt "$STACK_KB" ]; then
+  ulimit -s "$STACK_KB" 2>/dev/null || ulimit -s "$(ulimit -H -s)" 2>/dev/null
+fi
+
 tightvncserver -kill :${VNC_DISPLAY}
 tightvncserver :${VNC_DISPLAY}
 
