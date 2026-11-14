@@ -4,7 +4,7 @@ set -e
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
-apt-get install -y --no-install-recommends openbox wmctrl
+apt-get install -y --no-install-recommends openbox wmctrl ca-certificates
 case "$(dpkg --print-architecture)" in
   arm64) vscode=linux-deb-arm64 ;;
   amd64) vscode=linux-deb-x64 ;;
