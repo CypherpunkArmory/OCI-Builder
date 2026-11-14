@@ -1,0 +1,7 @@
+# The IDLE app's image: userland-debian plus Python's IDLE. Built on the base rather than from
+# debian:latest so it carries the base's /support files and fixes; build-idle.yml rebuilds
+# it whenever the base is rebuilt.
+FROM ghcr.io/cypherpunkarmory/userland-debian:next
+
+COPY apps/idle.sh /tmp/app.sh
+RUN sh /tmp/app.sh && rm /tmp/app.sh

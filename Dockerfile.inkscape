@@ -1,0 +1,7 @@
+# The Inky app's image: userland-debian plus Inkscape. Built on the base rather than from
+# debian:latest so it carries the base's /support files and fixes; build-inkscape.yml rebuilds
+# it whenever the base is rebuilt.
+FROM ghcr.io/cypherpunkarmory/userland-debian:next
+
+COPY apps/inkscape.sh /tmp/app.sh
+RUN sh /tmp/app.sh && rm /tmp/app.sh

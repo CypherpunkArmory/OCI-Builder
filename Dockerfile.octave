@@ -1,0 +1,7 @@
+# The Octave app's image: userland-debian plus GNU Octave. Built on the base rather than from
+# debian:latest so it carries the base's /support files and fixes; build-octave.yml rebuilds
+# it whenever the base is rebuilt.
+FROM ghcr.io/cypherpunkarmory/userland-debian:next
+
+COPY apps/octave.sh /tmp/app.sh
+RUN sh /tmp/app.sh && rm /tmp/app.sh

@@ -1,0 +1,26 @@
+name: Build Octave
+
+# An app image is built on its base image's :next, so it is rebuilt after every run of the base's
+# workflow -- weekly, which also picks up new versions of the app -- as well as when its own files
+# change.
+on:
+  workflow_run:
+    workflows: ['Build Debian']
+    types: [completed]
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.octave
+      - apps/octave.sh
+
+jobs:
+  build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-octave
+      upstream_image: ghcr.io/cypherpunkarmory/userland-debian:next
+      dockerfile: Dockerfile.octave
+      platforms: linux/amd64,linux/arm64
+    secrets: inherit

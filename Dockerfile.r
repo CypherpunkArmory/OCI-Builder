@@ -1,0 +1,7 @@
+# The R app's image: userland-debian plus R. Built on the base rather than from
+# debian:latest so it carries the base's /support files and fixes; build-r.yml rebuilds
+# it whenever the base is rebuilt.
+FROM ghcr.io/cypherpunkarmory/userland-debian:next
+
+COPY apps/r.sh /tmp/app.sh
+RUN sh /tmp/app.sh && rm /tmp/app.sh

@@ -1,0 +1,7 @@
+# The deVStudio app's image: userland-debian plus VS Code, Firefox and git. Built on the base rather than from
+# debian:latest so it carries the base's /support files and fixes; build-devstudio.yml rebuilds
+# it whenever the base is rebuilt.
+FROM ghcr.io/cypherpunkarmory/userland-debian:next
+
+COPY apps/devstudio.sh /tmp/app.sh
+RUN sh /tmp/app.sh && rm /tmp/app.sh

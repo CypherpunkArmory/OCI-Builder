@@ -1,0 +1,7 @@
+# The AiCLI app's image: userland-ubuntu plus AI coding CLIs on Node.js LTS. Built on the base rather than from
+# ubuntu:latest so it carries the base's /support files and fixes; build-aicli.yml rebuilds
+# it whenever the base is rebuilt.
+FROM ghcr.io/cypherpunkarmory/userland-ubuntu:next
+
+COPY apps/aicli.sh /tmp/app.sh
+RUN sh /tmp/app.sh && rm /tmp/app.sh
