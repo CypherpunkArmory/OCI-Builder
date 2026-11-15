@@ -43,9 +43,13 @@ cd ~
 # dropping every client still connecting. The session's first client is
 # xsetroot, which exits at once, and the clients still connecting would be
 # thrown off with it. -s 0 turns off the X server's own screen saver, which
-# would otherwise blank an idle desktop after ten minutes.
+# would otherwise blank an idle desktop after ten minutes. -UseIPv6=0: UserLAnd
+# keeps the VNC port on loopback by rewriting its binds (PRoot's --local-ports),
+# and the IPv6 listener TigerVNC opens is v6-only, which can't bind there. Since
+# 1.16 one listener failing is fatal ("Failed to bind socket: Invalid
+# argument"); UserLAnd's viewer and remote clients connect over IPv4 anyway.
 Xvnc :${VNC_DISPLAY} -geometry ${DIMENSIONS} -depth 24 -noreset -s 0 \
-  -rfbauth $VNC_DIR/passwd -SecurityTypes VncAuth -AlwaysShared \
+  -UseIPv6=0 -rfbauth $VNC_DIR/passwd -SecurityTypes VncAuth -AlwaysShared \
   > $VNC_DIR/Xvnc.log 2>&1 < /dev/null &
 XVNC_PID=$!
 
