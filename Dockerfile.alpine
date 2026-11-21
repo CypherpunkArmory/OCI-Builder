@@ -15,7 +15,7 @@ RUN printf 'https://dl-cdn.alpinelinux.org/alpine/latest-stable/main\nhttps://dl
     > /etc/apk/repositories && \
     apk update && \
     apk add --no-cache \
-      busybox-suid bash sudo dropbear mesa-gl xvfb x11vnc xsetroot xterm \
+      busybox-suid bash sudo dropbear sshfs mesa-gl xvfb x11vnc xsetroot xterm \
       twm expect shadow wget curl pulseaudio && \
     rm -rf /var/cache/apk/*
 

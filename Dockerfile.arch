@@ -40,7 +40,7 @@ RUN pacman -Syu --noconfirm --overwrite '*'
 # incidental, and an upstream change could silently regress it.
 RUN pacman -S --noconfirm --needed --overwrite '*' \
       systemd \
-      sudo dropbear x11vnc xterm xorg-twm xorg-server-xvfb xorg-xsetroot expect gzip
+      sudo dropbear sshfs x11vnc xterm xorg-twm xorg-server-xvfb xorg-xsetroot expect gzip
 
 RUN yes | pacman -Scc
 

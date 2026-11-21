@@ -41,6 +41,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
       less \
       nano \
       dropbear \
+      fuse-sshfs \
       tigervnc-x11-server \
       tigervnc-server-common \
       xterm \
