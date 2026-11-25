@@ -17,6 +17,12 @@ FROM fedora:latest
 RUN printf '#!/bin/sh\nunset LD_PRELOAD\nunset LD_LIBRARY_PATH\nexport LIBGL_ALWAYS_SOFTWARE=1\n' \
     > /etc/profile.d/userland.sh && chmod +x /etc/profile.d/userland.sh
 
+# Locales for the app's languages, which it picks from to follow the phone's (input/locale).
+COPY input/locale/locale.sh input/locale/keep-langpack.sh input/locale/setup.sh /usr/share/userland/
+RUN chmod a+x /usr/share/userland/keep-langpack.sh \
+    && sh /usr/share/userland/setup.sh \
+    && rm /usr/share/userland/setup.sh
+
 # systemd is a hard requirement of the AVF backend, not a convenience: avf-init
 # pivot_roots into /lib/systemd/systemd and runs it as PID 1 when present, which
 # is what makes `systemctl` -- and therefore Docker, podman and any packaged

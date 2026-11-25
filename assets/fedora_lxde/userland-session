@@ -1,2 +1,4 @@
 #!/bin/sh
+# The locale the app chose from the phone's language (see /usr/share/userland/locale.sh)
+[ -n "$LANG" ] || [ ! -r /usr/share/userland/locale.sh ] || . /usr/share/userland/locale.sh
 exec dbus-launch --exit-with-session startlxde

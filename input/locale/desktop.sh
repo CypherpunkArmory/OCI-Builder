@@ -7,6 +7,13 @@ set -e
 . /etc/os-release
 langs="ar ca de es fa fr hi id it ja ko pl pt ru tr vi zh-hans zh-hant"
 
+if [ "$ID" = fedora ]; then
+  dnf install -y --setopt=install_weak_deps=False google-noto-sans-cjk-fonts \
+    google-noto-sans-arabic-ui-fonts google-noto-sans-devanagari-ui-fonts
+  dnf clean all
+  exit 0
+fi
+
 apt-get update
 apt-get install -y --no-install-recommends fonts-noto-cjk fonts-noto-ui-core
 
