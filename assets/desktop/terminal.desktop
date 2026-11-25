@@ -2,7 +2,7 @@
 Type=Application
 Name=Terminal
 Comment=A shell in a terminal window
-Exec=xterm -e bash --login
+Exec=/usr/share/userland/desktop/terminal.sh
 Icon=/usr/share/icons/AdwaitaLegacy/48x48/legacy/utilities-terminal.png
 Terminal=false
 Categories=System;TerminalEmulator;
