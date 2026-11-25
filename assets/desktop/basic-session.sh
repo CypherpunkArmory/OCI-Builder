@@ -2,6 +2,9 @@
 # The basic desktop: openbox, a taskbar (tint2) with Terminal, Firefox and Files, and a
 # desktop with the same three (PCManFM). Started by ~/.vnc/xstartup (startVNCServerStep2.sh).
 export XKL_XMODMAP_DISABLE=1
+# A UTF-8 locale when the session has none (the VNC server is started without one), so
+# the terminal and what runs in it show more than ASCII.
+[ -n "$LANG$LC_ALL" ] || export LANG=C.UTF-8
 # One session bus for everything below (Firefox and GTK use it, and its accessibility bus).
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ] && command -v dbus-launch > /dev/null; then
   exec dbus-launch --exit-with-session "$0" "$@"
