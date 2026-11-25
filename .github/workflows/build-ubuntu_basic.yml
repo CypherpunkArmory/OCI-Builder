@@ -1,0 +1,27 @@
+name: Build Ubuntu Basic
+
+# The free basic desktop (openbox, tint2, PCManFM, Firefox ESR) is built on the base image's
+# :next, like the app images, so it is rebuilt after every run of the base's workflow as well as
+# when its own files change.
+on:
+  workflow_run:
+    workflows: ['Build Ubuntu']
+    types: [completed]
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - Dockerfile.ubuntu_basic
+      - assets/desktop/**
+      - assets/basic/**
+
+jobs:
+  build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image_name: userland-ubuntu_basic
+      upstream_image: ghcr.io/cypherpunkarmory/userland-ubuntu:next
+      dockerfile: Dockerfile.ubuntu_basic
+      platforms: linux/amd64,linux/arm64
+    secrets: inherit

@@ -1,0 +1,89 @@
+# Managed by UserLAnd (/support/desktop): regenerated at each start to the desktop's size.
+# Backgrounds: 1 panel, 2 window button, 3 active window button. They come first: tint2 17.0.1
+# on Ubuntu 26.04 and Kali crashes (in its gradient setup) when a *_background_id is read
+# before the background it names is defined.
+rounded = 0
+border_width = 0
+border_sides = TBLR
+background_color = #263238 100
+border_color = #000000 0
+background_color_hover = #263238 100
+border_color_hover = #000000 0
+background_color_pressed = #263238 100
+border_color_pressed = #000000 0
+
+rounded = 3
+border_width = 0
+border_sides = TBLR
+background_color = #ffffff 10
+border_color = #ffffff 0
+background_color_hover = #ffffff 20
+border_color_hover = #ffffff 0
+background_color_pressed = #ffffff 30
+border_color_pressed = #ffffff 0
+
+rounded = 3
+border_width = 0
+border_sides = TBLR
+background_color = #ffffff 30
+border_color = #ffffff 0
+background_color_hover = #ffffff 35
+border_color_hover = #ffffff 0
+background_color_pressed = #ffffff 40
+border_color_pressed = #ffffff 0
+
+# Panel
+panel_items = LTC
+panel_size = 100% @HEIGHT@
+panel_margin = 0 0
+panel_padding = 4 2 6
+panel_position = bottom center horizontal
+panel_layer = top
+panel_dock = 0
+wm_menu = 1
+panel_background_id = 1
+strut_policy = follow_size
+autohide = 0
+
+# Launchers: Terminal, Firefox, Files
+launcher_padding = 4 2 @GAP@
+launcher_background_id = 0
+launcher_icon_background_id = 0
+launcher_icon_size = @ICON@
+launcher_icon_theme = Adwaita
+launcher_tooltip = 1
+launcher_item_app = /support/desktop/terminal.desktop
+launcher_item_app = /support/desktop/firefox.desktop
+launcher_item_app = /support/desktop/files.desktop
+
+# Open windows
+taskbar_mode = single_desktop
+taskbar_padding = 2 2 4
+taskbar_background_id = 0
+taskbar_active_background_id = 0
+taskbar_name_background_id = 0
+taskbar_name_active_background_id = 0
+task_icon = 1
+task_text = 1
+task_centered = 0
+task_maximum_size = @TASKW@ @HEIGHT@
+task_padding = 6 2 4
+task_font = Sans 9
+task_font_color = #ffffff 100
+task_background_id = 2
+task_active_background_id = 3
+task_iconified_background_id = 2
+task_urgent_background_id = 3
+task_active_font_color = #ffffff 100
+mouse_left = toggle_iconify
+mouse_right = close
+
+# Clock
+time1_format = %H:%M
+clock_background_id = 0
+systray_background_id = 0
+battery_background_id = 0
+tooltip_background_id = 0
+time1_font = Sans Bold 9
+clock_font_color = #ffffff 100
+clock_padding = 6 0

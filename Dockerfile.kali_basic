@@ -1,0 +1,32 @@
+# The free basic desktop for Kali: userland-kali plus openbox, a taskbar (tint2) and a file
+# manager drawing the desktop (PCManFM), with Terminal, Firefox and Files on both, sized for the
+# phone's screen (assets/desktop). Built on the base, like the app images, so the base stays
+# small for terminal use and the apps built on it; build-kali_basic.yml rebuilds it whenever
+# the base is rebuilt.
+FROM ghcr.io/cypherpunkarmory/userland-kali:next
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# adwaita-icon-theme-legacy has the full-colour terminal and file manager icons; the current
+# Adwaita has only symbolic ones.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      openbox \
+      tint2 \
+      pcmanfm \
+      x11-xserver-utils \
+      dbus-x11 \
+      fonts-dejavu-core \
+      adwaita-icon-theme \
+      adwaita-icon-theme-legacy \
+      firefox-esr \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY assets/desktop/ /support/desktop/
+COPY assets/basic/ /support/
+
+# Firefox's interface scale from the session (assets/desktop/firefox-userland.cfg).
+RUN cp /support/desktop/firefox-autoconfig.js /usr/lib/firefox-esr/defaults/pref/userland-autoconfig.js \
+    && cp /support/desktop/firefox-userland.cfg /usr/lib/firefox-esr/userland.cfg
+
+RUN chmod a+x /support/desktop/*.sh /support/startVNCServerStep2.sh \
+    && chmod -R a-w /support/desktop /support/startVNCServerStep2.sh

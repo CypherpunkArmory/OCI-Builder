@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Firefox
+Comment=Browse the web
+Exec=/support/desktop/firefox.sh %u
+Icon=firefox-esr
+Terminal=false
+Categories=Network;WebBrowser;
+MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
