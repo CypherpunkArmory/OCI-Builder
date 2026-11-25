@@ -35,6 +35,8 @@ echo $vncrc_line > /home/$INITIAL_USERNAME/.vncrc
 
 mkdir -p /home/$INITIAL_USERNAME/.vnc
 echo '#!/bin/sh' > /home/$INITIAL_USERNAME/.vnc/xstartup
+# The locale the app chose from the phone's language (see /usr/share/userland/locale.sh)
+echo '[ -n "$LANG" ] || [ ! -r /usr/share/userland/locale.sh ] || . /usr/share/userland/locale.sh' >> /home/$INITIAL_USERNAME/.vnc/xstartup
 echo '/usr/bin/startlxde' >> /home/$INITIAL_USERNAME/.vnc/xstartup
 chmod 777 /home/$INITIAL_USERNAME/.vnc/xstartup
 

@@ -14,6 +14,7 @@ on:
       - Dockerfile.debian_basic
       - assets/desktop/**
       - assets/basic/**
+      - input/locale/**
 
 jobs:
   build:
