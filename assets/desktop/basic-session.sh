@@ -6,16 +6,16 @@ export XKL_XMODMAP_DISABLE=1
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ] && command -v dbus-launch > /dev/null; then
   exec dbus-launch --exit-with-session "$0" "$@"
 fi
-. /support/desktop/apply-dpi.sh
+. /usr/share/userland/desktop/apply-dpi.sh
 
 px() { echo $(( ($1 * UL_DPI + 48) / 96 )); }
 mkdir -p "$HOME/.config/tint2" "$HOME/Desktop" "$HOME/.config/libfm"
 sed -e "s/@HEIGHT@/$(px 36)/g" -e "s/@ICON@/$(px 26)/g" -e "s/@GAP@/$(px 6)/g" \
-    -e "s/@TASKW@/$(px 200)/g" /support/desktop/tint2rc.in > "$HOME/.config/tint2/tint2rc"
+    -e "s/@TASKW@/$(px 200)/g" /usr/share/userland/desktop/tint2rc.in > "$HOME/.config/tint2/tint2rc"
 # The desktop's icons, once: a user who removes one keeps it removed.
 if [ ! -f "$HOME/.config/userland-desktop-icons" ]; then
-  cp /support/desktop/terminal.desktop /support/desktop/firefox.desktop \
-     /support/desktop/files.desktop "$HOME/Desktop/"
+  cp /usr/share/userland/desktop/terminal.desktop /usr/share/userland/desktop/firefox.desktop \
+     /usr/share/userland/desktop/files.desktop "$HOME/Desktop/"
   touch "$HOME/.config/userland-desktop-icons"
 fi
 # A plain background, and the icons where the terminal opened at the top left doesn't cover

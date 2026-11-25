@@ -30,12 +30,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       firefox-esr \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY assets/desktop/ /support/desktop/
+COPY assets/desktop/ /usr/share/userland/desktop/
 COPY assets/basic/ /support/
 
 # Firefox's interface scale from the session (assets/desktop/firefox-userland.cfg).
-RUN cp /support/desktop/firefox-autoconfig.js /usr/lib/firefox-esr/defaults/pref/userland-autoconfig.js \
-    && cp /support/desktop/firefox-userland.cfg /usr/lib/firefox-esr/userland.cfg
+RUN cp /usr/share/userland/desktop/firefox-autoconfig.js /usr/lib/firefox-esr/defaults/pref/userland-autoconfig.js \
+    && cp /usr/share/userland/desktop/firefox-userland.cfg /usr/lib/firefox-esr/userland.cfg
 
-RUN chmod a+x /support/desktop/*.sh /support/startVNCServerStep2.sh \
-    && chmod -R a-w /support/desktop /support/startVNCServerStep2.sh
+RUN chmod a+x /usr/share/userland/desktop/*.sh /support/startVNCServerStep2.sh \
+    && chmod a-w /usr/share/userland/desktop/* /support/startVNCServerStep2.sh

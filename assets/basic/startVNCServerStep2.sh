@@ -37,12 +37,12 @@ if [[ -z "${VNC_DISPLAY}" ]]; then
   VNC_DISPLAY="51"
 fi
 
-# The basic desktop (openbox, a taskbar, desktop icons, Firefox; see /support/desktop). UL_DPI,
+# The basic desktop (openbox, a taskbar, desktop icons, Firefox; see /usr/share/userland/desktop). UL_DPI,
 # from the app, sizes it for the phone's screen; DIMENSIONS places its icons.
 cat > /home/$INITIAL_USERNAME/.vnc/xstartup <<EOF
 #!/bin/sh
 export UL_DPI="${UL_DPI}" DIMENSIONS="${DIMENSIONS}"
-exec /support/desktop/basic-session.sh
+exec /usr/share/userland/desktop/basic-session.sh
 EOF
 chmod 755 /home/$INITIAL_USERNAME/.vnc/xstartup
 
