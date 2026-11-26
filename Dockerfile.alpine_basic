@@ -14,7 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends adwaita-icon-th
 
 FROM ghcr.io/cypherpunkarmory/userland-alpine:next
 
+# hicolor-icon-theme: the index that lets the taskbar and desktop find Firefox's icon (in hicolor),
+# which Alpine's GTK doesn't bring in as other distributions' does.
 RUN apk add --no-cache \
+      hicolor-icon-theme \
       openbox \
       tint2 \
       pcmanfm \
