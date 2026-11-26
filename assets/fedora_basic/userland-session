@@ -1,0 +1,4 @@
+#!/bin/sh
+# The basic desktop (/usr/share/userland/desktop), on the display assets/fedora/startVNCServerStep2.sh
+# started; it sets its own locale and session bus.
+exec /usr/share/userland/desktop/basic-session.sh

@@ -1,0 +1,42 @@
+# The free basic desktop for Alpine: userland-alpine plus openbox, a taskbar (tint2) and a file
+# manager drawing the desktop (PCManFM), with Terminal, Firefox and Files on both, sized for the
+# phone's screen (assets/desktop). Built on the base, like Debian's (Dockerfile.debian_basic);
+# build-alpine_basic.yml rebuilds it whenever the base is rebuilt. Served by Xvfb and x11vnc,
+# as the base is (assets/basic_x11vnc).
+
+# Alpine doesn't package Adwaita's legacy (full-colour) icons, which the desktop's Terminal and
+# Files use: take the two from Debian's package.
+FROM debian:stable-slim AS icons
+RUN apt-get update && apt-get install -y --no-install-recommends adwaita-icon-theme-legacy \
+    && mkdir -p /out \
+    && cp /usr/share/icons/AdwaitaLegacy/48x48/legacy/utilities-terminal.png \
+          /usr/share/icons/AdwaitaLegacy/48x48/legacy/system-file-manager.png /out/
+
+FROM ghcr.io/cypherpunkarmory/userland-alpine:next
+
+RUN apk add --no-cache \
+      openbox \
+      tint2 \
+      pcmanfm \
+      xrdb \
+      dbus-x11 \
+      font-dejavu \
+      adwaita-icon-theme \
+      firefox-esr
+
+COPY --from=icons /out/ /usr/share/icons/AdwaitaLegacy/48x48/legacy/
+
+# Fonts for the app's languages and Firefox's language packs (input/locale)
+COPY input/locale/desktop.sh /tmp/desktop.sh
+RUN sh /tmp/desktop.sh firefox && rm /tmp/desktop.sh
+
+COPY assets/desktop/ /usr/share/userland/desktop/
+COPY assets/basic_x11vnc/ /support/
+
+# Firefox's interface scale from the session (assets/desktop/firefox-userland.cfg).
+RUN ff=$(dirname "$(ls /usr/lib*/firefox*/application.ini | head -1)") \
+    && cp /usr/share/userland/desktop/firefox-autoconfig.js $ff/defaults/pref/userland-autoconfig.js \
+    && cp /usr/share/userland/desktop/firefox-userland.cfg $ff/userland.cfg
+
+RUN chmod a+x /usr/share/userland/desktop/*.sh /support/startVNCServerStep2.sh \
+    && chmod a-w /usr/share/userland/desktop/* /support/startVNCServerStep2.sh

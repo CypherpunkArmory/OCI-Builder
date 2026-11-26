@@ -66,13 +66,14 @@ done
 
 /support/userland-session > $VNC_DIR/session.log 2>&1 < /dev/null &
 
-# The xterm waits for the window manager to take over the screen (the
+# The basic desktop (fedora_basic) opens no terminal: it has a Terminal icon. Elsewhere the xterm
+# waits for the window manager to take over the screen (the
 # _NET_SUPPORTING_WM_CHECK it sets on the root window), giving up after 10s.
 # Mapped before that, it was not drawn until some input arrived -- the desktop
 # came up a bare gray screen, most often on a first start, where openbox is
 # slowest. In the background, so the pid file -- and so UserLAnd's viewer --
 # does not wait on it.
-(
+[ -x /usr/share/userland/desktop/basic-session.sh ] || (
   for i in $(seq 1 20); do
     xprop -root _NET_SUPPORTING_WM_CHECK 2>/dev/null | grep -q 'window id' && break
     sleep 0.5

@@ -1,0 +1,37 @@
+# The free basic desktop for Arch: userland-arch plus openbox, a taskbar (tint2) and a file
+# manager drawing the desktop (PCManFM), with Terminal, Firefox and Files on both, sized for the
+# phone's screen (assets/desktop). Built on the base, like Debian's (Dockerfile.debian_basic);
+# build-arch_basic.yml rebuilds it whenever the base is rebuilt. Served by Xvfb and x11vnc,
+# as the base is (assets/basic_x11vnc).
+FROM ghcr.io/cypherpunkarmory/userland-arch:next
+
+# adwaita-icon-theme-legacy has the full-colour terminal and file manager icons; the current
+# Adwaita has only symbolic ones.
+RUN pacman -Syu --noconfirm --needed --overwrite '*' \
+      openbox \
+      tint2 \
+      pcmanfm \
+      xorg-xrdb \
+      dbus \
+      ttf-dejavu \
+      adwaita-icon-theme \
+      adwaita-icon-theme-legacy \
+      firefox \
+    && yes | pacman -Scc
+
+# Fonts for the app's languages and Firefox's language packs (input/locale)
+COPY input/locale/desktop.sh /tmp/desktop.sh
+RUN sh /tmp/desktop.sh firefox && rm /tmp/desktop.sh
+
+COPY assets/desktop/ /usr/share/userland/desktop/
+COPY assets/basic_x11vnc/ /support/
+
+# Firefox's interface scale from the session (assets/desktop/firefox-userland.cfg), and its
+# icon by the name Arch gives it.
+RUN ff=$(dirname "$(ls /usr/lib*/firefox/application.ini | head -1)") \
+    && cp /usr/share/userland/desktop/firefox-autoconfig.js $ff/defaults/pref/userland-autoconfig.js \
+    && cp /usr/share/userland/desktop/firefox-userland.cfg $ff/userland.cfg \
+    && sed -i 's/^Icon=.*/Icon=firefox/' /usr/share/userland/desktop/firefox.desktop
+
+RUN chmod a+x /usr/share/userland/desktop/*.sh /support/startVNCServerStep2.sh \
+    && chmod a-w /usr/share/userland/desktop/* /support/startVNCServerStep2.sh

@@ -2,7 +2,7 @@
 # desktop.sh [firefox]: what a desktop image adds to the base's locales (setup.sh): fonts for
 # the app's languages beyond Latin, Greek and Cyrillic (Chinese, Japanese and Korean in their own
 # character forms; Arabic, Persian and Hindi), GTK's translations on Ubuntu, and with "firefox"
-# Firefox ESR's language packs. Run once while building a desktop image, after setup.sh.
+# Firefox's language packs. Run once while building a desktop image, after setup.sh.
 set -e
 . /etc/os-release
 langs="ar ca de es fa fr hi id it ja ko pl pt ru tr vi zh-hans zh-hant"
@@ -10,7 +10,36 @@ langs="ar ca de es fa fr hi id it ja ko pl pt ru tr vi zh-hans zh-hant"
 if [ "$ID" = fedora ]; then
   dnf install -y --setopt=install_weak_deps=False google-noto-sans-cjk-fonts \
     google-noto-sans-arabic-ui-fonts google-noto-sans-devanagari-ui-fonts
+  # Firefox's language packs, all in one package
+  [ "$1" != firefox ] || dnf install -y --setopt=install_weak_deps=False firefox-langpacks
   dnf clean all
+  exit 0
+fi
+
+if [ "$ID" = arch ] || [ "$ID" = archarm ]; then
+  # Source Han Sans: the CJK fonts without Noto CJK's serif half; noto-fonts has Arabic and
+  # Devanagari
+  pacman -S --noconfirm --needed --overwrite '*' adobe-source-han-sans-otc-fonts noto-fonts
+  # firefox-i18n-<locale>, as Debian names them
+  [ "$1" != firefox ] || pacman -S --noconfirm --needed --overwrite '*' $(for l in ar ca de es-es fa fr \
+    hi-in id it ja ko pl pt-br ru tr vi zh-cn zh-tw; do echo firefox-i18n-$l; done)
+  yes | pacman -Scc
+  exit 0
+fi
+
+if [ "$ID" = alpine ]; then
+  apk add --no-cache font-noto-cjk font-noto-arabic font-noto-devanagari
+  # Alpine packages no language packs: Mozilla's for this exact Firefox ESR, which Firefox loads
+  # from its distribution folder (one for another version is skipped, until it is rebuilt)
+  if [ "$1" = firefox ]; then
+    v=$(apk info -e -v firefox-esr | sed 's/^firefox-esr-//; s/-r[0-9]*$//')
+    d=/usr/lib/firefox-esr/distribution/extensions
+    mkdir -p $d
+    for l in ar ca de es-ES fa fr hi-IN id it ja ko pl pt-BR ru tr vi zh-CN zh-TW; do
+      wget -q -O $d/langpack-$l@firefox.mozilla.org.xpi \
+        https://ftp.mozilla.org/pub/firefox/releases/${v}esr/linux-x86_64/xpi/$l.xpi
+    done
+  fi
   exit 0
 fi
 
