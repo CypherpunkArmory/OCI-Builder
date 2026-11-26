@@ -33,5 +33,9 @@ RUN ff=$(dirname "$(ls /usr/lib*/firefox/application.ini | head -1)") \
     && cp /usr/share/userland/desktop/firefox-userland.cfg $ff/userland.cfg \
     && sed -i 's/^Icon=.*/Icon=firefox/' /usr/share/userland/desktop/firefox.desktop
 
+# GTK loads images through glycin, which sandboxes each decoder with bubblewrap: not possible
+# under proot, where the shim runs them unsandboxed (assets/desktop/bwrap-proot.sh).
+RUN ln -s /usr/share/userland/desktop/bwrap-proot.sh /usr/local/bin/bwrap
+
 RUN chmod a+x /usr/share/userland/desktop/*.sh /support/startVNCServerStep2.sh \
     && chmod a-w /usr/share/userland/desktop/* /support/startVNCServerStep2.sh
