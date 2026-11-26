@@ -42,8 +42,21 @@ if [ ! -f "$items" ]; then
     done
   } > "$items"
 fi
-# Launch desktop entries without asking whether to run them, and open things with one tap.
-[ -f "$HOME/.config/libfm/libfm.conf" ] || printf '[config]\nquick_exec=1\nsingle_click=1\n' > "$HOME/.config/libfm/libfm.conf"
+# PCManFM wraps a desktop label at 100 pixels whatever the DPI: the label font follows the DPI
+# (9pt) only up to 19 pixels, so "Terminal" fits on one line. Redone each start, as the DPI
+# can change, unless the user chose another font.
+fpx=$(( 9 * UL_DPI / 72 )); [ "$fpx" -gt 19 ] && fpx=19
+sed -i -E "s/^desktop_font=Sans [0-9]+(px)?$/desktop_font=Sans ${fpx}px/" "$items"
+# Launch desktop entries without asking whether to run them, and open things with one tap; icons
+# (the desktop's and the file manager's) sized for the DPI, each start.
+libfm="$HOME/.config/libfm/libfm.conf"
+[ -f "$libfm" ] || printf '[config]\nquick_exec=1\nsingle_click=1\n' > "$libfm"
+grep -q '^\[ui\]' "$libfm" || printf '\n[ui]\n' >> "$libfm"
+if grep -q '^big_icon_size=' "$libfm"; then
+  sed -i "s/^big_icon_size=.*/big_icon_size=$(px 48)/" "$libfm"
+else
+  sed -i "/^\[ui\]/a big_icon_size=$(px 48)" "$libfm"
+fi
 
 # Openbox's settings, made once from the system's (the user's own edits are kept after): Ctrl+Alt+T
 # opens a terminal, and on a phone-sized desktop windows open maximized (a window wider than the
